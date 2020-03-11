@@ -3,6 +3,9 @@
 #define GLITTER
 #pragma once
 
+// Local Headers
+#include "glshader.hpp"
+
 // System Headers
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>

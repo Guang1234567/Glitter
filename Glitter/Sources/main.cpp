@@ -49,60 +49,22 @@ int main(int argc, char * argv[]) {
     
     // build and compile our shader program
     // ------------------------------------
-    // vertex shader
-    int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    const char* vertexShaderSource = contentsOfShaderSource("./vertexShaderSource.vert");
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    // check for shader compile errors
     int success = 0;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    GLShader glShader("./vertexShaderSource.vert", "./fragmentShaderSource.frag", &success);
     if (0 == success) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        fprintf(stderr, "Failed to Create OpenGL Vertex Shader:\n%s\n", infoLog);
+        fprintf(stderr, "Failed to Create OpenGL Shader\n");
         glfwTerminate();
         return EXIT_FAILURE;
     }
-    // fragment shader
-    int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    const char* fragmentShaderSource = contentsOfShaderSource("./fragmentShaderSource.frag");
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    // check for shader compile errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (0 == success) {
-      glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-      fprintf(stderr, "Failed to Create OpenGL Fragment Shader:\n%s\n",
-              infoLog);
-      glfwTerminate();
-      return EXIT_FAILURE;
-    }
-    // link shaders
-    int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    // check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        fprintf(stderr, "Failed to Link OpenGL Shaders:\n%s\n",
-                infoLog);
-        glfwTerminate();
-        return EXIT_FAILURE;
-    }
-    // delete shaders after linked shaders
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
     
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
      // 三角形
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f, // left
-         0.5f, -0.5f, 0.0f, // right
-         0.0f,  0.5f, 0.0f  // top
+        // position          // color
+        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // left
+         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // right
+         0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f  // top
     };
      
      unsigned int indices[] = { // 注意索引从0开始!
@@ -134,9 +96,16 @@ int main(int argc, char * argv[]) {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) /*bytes*/, vertices, GL_STATIC_DRAW);
     // link VBO to Vertex shader
+    // ---------------------------
+    // link position vertex data
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-                          3 * sizeof(float) /*stride*/, (void *)0);
+                          6 * sizeof(float) /*stride*/, (void *)0);
     glEnableVertexAttribArray(0);
+    // link color vertex data
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+                          6 * sizeof(float) /*stride*/,
+                          (void *)(3 * sizeof(float)) /*offset*/);
+    glEnableVertexAttribArray(1);
     
     //EBO
     unsigned int EBO = 0;
@@ -165,12 +134,11 @@ int main(int argc, char * argv[]) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // draw our first triangle
-        glUseProgram(shaderProgram);
-         // 更新uniform颜色
+        glShader.use();
         float timeValue = glfwGetTime();
-        float greenValue = sin(timeValue) / 2.0f + 0.5f;
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+        float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
+        glShader.setFloat("myColor", 0.0f, greenValue, 0.0f);
+        
         glBindVertexArray(VAO); // bind VAO
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); // bind EBO
         //glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -193,17 +161,6 @@ int main(int argc, char * argv[]) {
     // ------------------------------------------------------------------
     glfwTerminate();
     return EXIT_SUCCESS;
-}
-
-
-const char* contentsOfShaderSource(const char* filePath) {
-    std::ifstream in(filePath);
-    std::string contents((std::istreambuf_iterator<char>(in)),
-                       std::istreambuf_iterator<char>());
-    if (in.is_open()) {
-        in.close();
-    }
-    return contents.c_str();
 }
 
 void framebuffer_size_changed(GLFWwindow* window, int width, int height) {
