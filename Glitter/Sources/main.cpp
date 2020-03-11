@@ -194,7 +194,10 @@ int main(int argc, char * argv[]) {
 const char* contentsOfShaderSource(const char* filePath) {
     std::ifstream in(filePath);
     std::string contents((std::istreambuf_iterator<char>(in)),
-                         std::istreambuf_iterator<char>());
+                       std::istreambuf_iterator<char>());
+    if (in.is_open()) {
+        in.close();
+    }
     return contents.c_str();
 }
 
