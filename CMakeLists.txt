@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
 project(Glitter)
 
+option(BUILD_SHARED_LIBS ON)
+
 option(GLFW_BUILD_DOCS OFF)
 option(GLFW_BUILD_EXAMPLES OFF)
 option(GLFW_BUILD_TESTS OFF)
@@ -36,28 +38,35 @@ include_directories(Glitter/Headers/
                     Glitter/Vendor/stb/)
 
 file(GLOB VENDORS_SOURCES Glitter/Vendor/glad/src/glad.c)
-file(GLOB PROJECT_HEADERS Glitter/Headers/*.hpp)
+file(GLOB PROJECT_HEADERS Glitter/Headers/*.hpp
+                          Glitter/Vendor/glad/include/*/*.h
+                          Glitter/Vendor/glfw/include//*/*.h)
 file(GLOB PROJECT_SOURCES Glitter/Sources/*.cpp)
 file(GLOB PROJECT_SHADERS Glitter/Shaders/*.comp
                           Glitter/Shaders/*.frag
                           Glitter/Shaders/*.geom
-                          Glitter/Shaders/*.vert)
+                          Glitter/Shaders/*.vert
+                          Glitter/Shaders/*.vs
+                          Glitter/Shaders/*.fs)
 file(GLOB PROJECT_CONFIGS CMakeLists.txt
                           Readme.md
                          .gitattributes
                          .gitignore
                          .gitmodules)
+file(GLOB PROJECT_TEXTURES Glitter/Textures/*.png
+                           Glitter/Textures/*.jpg)
 
-source_group("Headers" FILES ${PROJECT_HEADERS})
-source_group("Shaders" FILES ${PROJECT_SHADERS})
-source_group("Sources" FILES ${PROJECT_SOURCES})
-source_group("Vendors" FILES ${VENDORS_SOURCES})
+source_group("Headers"  FILES ${PROJECT_HEADERS})
+source_group("Shaders"  FILES ${PROJECT_SHADERS})
+source_group("Sources"  FILES ${PROJECT_SOURCES})
+source_group("Textures" FILES ${PROJECT_TEXTURES})
+source_group("Vendors"  FILES ${VENDORS_SOURCES})
 
 add_definitions(-DGLFW_INCLUDE_NONE
                 -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\")
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS}
                                ${PROJECT_SHADERS} ${PROJECT_CONFIGS}
-                               ${VENDORS_SOURCES})
+                               ${PROJECT_TEXTURES} ${VENDORS_SOURCES})
 target_link_libraries(${PROJECT_NAME} assimp glfw
                       ${GLFW_LIBRARIES} ${GLAD_LIBRARIES}
                       BulletDynamics BulletCollision LinearMath)
@@ -67,4 +76,5 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Glitter/Shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>
-    DEPENDS ${PROJECT_SHADERS})
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Glitter/Textures $<TARGET_FILE_DIR:${PROJECT_NAME}>
+    DEPENDS ${PROJECT_SHADERS} ${PROJECT_TEXTURES})

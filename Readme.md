@@ -1,3 +1,10 @@
+# My Changed
+
+[06 Textures](https://learnopengl-cn.github.io/01 Getting started/06 Textures/)
+
+[source code](https://learnopengl.com/code_viewer_gh.php?code=src/1.getting_started/4.2.textures_combined/textures_combined.cpp)
+
+
 # [Glitter](http://polytonic.github.io/Glitter/)
 ![Screenshot](http://i.imgur.com/MDo2rsy.jpg)
 
