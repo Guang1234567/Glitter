@@ -1,6 +1,6 @@
 # My Changed
 
-[04 Hello Triangle](https://learnopengl-cn.github.io/01 Getting started/04 Hello Triangle/)
+[05 Shaders](https://learnopengl-cn.github.io/01 Getting started/05 Shaders/)
 
 [source code](https://learnopengl.com/code_viewer_gh.php?code=src/1.getting_started/2.2.hello_triangle_indexed/hello_triangle_indexed.cpp)
 
