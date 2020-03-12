@@ -16,6 +16,8 @@ const char* contentsOfShaderSource(const char* filePath);
 
 void framebuffer_size_changed(GLFWwindow* window, int width, int height);
 
+float mixValue = 0.2f;
+
 int main(int argc, char *argv[]) {
 
   // Load GLFW and Create a Window
@@ -79,12 +81,13 @@ int main(int argc, char *argv[]) {
   //    };
 
   // 矩形
+  float texturePadding = 0.0f/*0.35f*/;
   float vertices[] = {
-      //     ---- 位置 ----       ---- 颜色 ----     - 纹理坐标 -
-      0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // 右上
-      0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // 右下
-      -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // 左下
-      -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // 左上
+      // ---- 位置 ----          ---- 颜色 ----      - 纹理坐标 -
+      0.5f,  0.5f,  0.0f,   1.0f, 0.0f, 0.0f,   1.0f - texturePadding, 1.0f - texturePadding, // 右上
+      0.5f,  -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f - texturePadding, 0.0f + texturePadding, // 右下
+      -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f + texturePadding, 0.0f + texturePadding, // 左下
+      -0.5f, 0.5f,  0.0f,   1.0f, 1.0f, 0.0f,   0.0f + texturePadding, 1.0f - texturePadding  // 左上
   };
 
   unsigned int indices[] = {
@@ -135,10 +138,9 @@ int main(int argc, char *argv[]) {
   glGenTextures(1, &texture0);
   glBindTexture(GL_TEXTURE_2D, texture0);
   // 为当前绑定的纹理对象设置环绕、过滤方式
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   // 加载并生成纹理
   int width, height, nrChannels;
@@ -162,14 +164,13 @@ int main(int argc, char *argv[]) {
   // 为当前绑定的纹理对象设置环绕、过滤方式
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   // 加载并生成纹理
   data =
       stbi_load("awesomeface.png", &width, &height, &nrChannels, 0);
   if (nullptr != data) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
   } else {
@@ -190,6 +191,20 @@ int main(int argc, char *argv[]) {
   while (glfwWindowShouldClose(mWindow) == false) {
     if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
       glfwSetWindowShouldClose(mWindow, true);
+    }
+      
+    if(glfwGetKey(mWindow, GLFW_KEY_UP) == GLFW_PRESS) {
+      mixValue += 0.005;
+      if (mixValue >= 1.0f) {
+          mixValue = 1.0f;
+      }
+    }
+      
+    if(glfwGetKey(mWindow, GLFW_KEY_DOWN) == GLFW_PRESS) {
+      mixValue -= 0.005;
+      if (mixValue <= 0.0f) {
+          mixValue = 0.0f;
+      }
     }
 
     // Background Fill Color
@@ -213,6 +228,8 @@ int main(int argc, char *argv[]) {
       
     glShader.setInt("ourTexture0", GL_TEXTURE0 - GL_TEXTURE0 /*GL_TEXTURE0*/);
     glShader.setInt("ourTexture1", GL_TEXTURE1 - GL_TEXTURE0 /*GL_TEXTURE1*/);
+      
+      glShader.setFloat("mixValue", mixValue);
       
     // glDrawArrays(GL_TRIANGLES, 0, 3);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
