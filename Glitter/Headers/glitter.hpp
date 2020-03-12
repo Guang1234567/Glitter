@@ -3,6 +3,9 @@
 #define GLITTER
 #pragma once
 
+// Local Headers
+#include "glshader.hpp"
+
 // System Headers
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
@@ -14,11 +17,11 @@
 
 // Reference: https://github.com/nothings/stb/blob/master/stb_image.h#L4
 // To use stb_image, add this in *one* C++ source file.
-//     #define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 // Define Some Constants
-const int mWidth = 1280;
-const int mHeight = 800;
+const int mWidth = 800;
+const int mHeight = 600;
 
 #endif //~ Glitter Header
