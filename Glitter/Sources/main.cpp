@@ -1,101 +1,104 @@
-// Local Headers
-#include "glitter.hpp"
+    // Local Headers
+    #include "glitter.hpp"
 
-// System Headers
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+    // System Headers
+    #include <glad/glad.h>
+    #include <GLFW/glfw3.h>
 
-// Standard Headers
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-#include <string>
+    // Standard Headers
+    #include <cstdio>
+    #include <cstdlib>
+    #include <iostream>
+    #include <fstream>
+    #include <string>
 
-const char *contentsOfShaderSource(const char *filePath);
+    const char *contentsOfShaderSource(const char *filePath);
 
-void framebuffer_size_changed(GLFWwindow *window, int width, int height);
+    void framebuffer_size_changed(GLFWwindow *window, int width, int height);
 
-void mouse_callback(GLFWwindow *window, double xPos, double yPos);
+    void mouse_callback(GLFWwindow *window, double xPos, double yPos);
 
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+    void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
-float mixValue = 0.2f;
+    float mixValue = 0.2f;
 
-float lastX = mWidth / 2, lastY = mHeight / 2;
+    float centerX = (float)mWidth / 2, centerY = (float)mHeight / 2;
 
-// camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-bool firstMouse = true;
+    // camera
+    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    bool firstMouse = true;
 
-int main(int argc, char *argv[]) {
-  // Load GLFW and Create a Window
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-  glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-  auto mWindow = glfwCreateWindow(mWidth, mHeight, "OpenGL", nullptr, nullptr);
+    GLFWwindow* mWindow;
 
-  // Check for Valid Context
-  if (mWindow == nullptr) {
+    int main(int argc, char *argv[]) {
+    // Load GLFW and Create a Window
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    #ifdef __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    #endif
+    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+    mWindow = glfwCreateWindow(mWidth, mHeight, "OpenGL", nullptr, nullptr);
+
+    // Check for Valid Context
+    if (mWindow == nullptr) {
     fprintf(stderr, "Failed to Create OpenGL Context\n");
     glfwTerminate();
     return EXIT_FAILURE;
-  }
+    }
 
-  // Create Context and Load OpenGL Functions
-  glfwMakeContextCurrent(mWindow);
-  if (0 == gladLoadGL()) {
+    // Create Context and Load OpenGL Functions
+    glfwMakeContextCurrent(mWindow);
+    if (0 == gladLoadGL()) {
     fprintf(stderr, "Failed to initialize GLAD\n");
     glfwTerminate();
     return EXIT_FAILURE;
-  }
-  fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
+    }
+    fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
 
-  glfwSetFramebufferSizeCallback(mWindow, framebuffer_size_changed);
-  glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  glfwSetCursorPosCallback(mWindow, mouse_callback);
-  glfwSetScrollCallback(mWindow, scroll_callback);
+    glfwSetFramebufferSizeCallback(mWindow, framebuffer_size_changed);
+    //glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    //glfwSetCursorPos(mWindow, centerX, centerY);
+    glfwSetCursorPosCallback(mWindow, mouse_callback);
+    glfwSetScrollCallback(mWindow, scroll_callback);
 
-  // build and compile our shader program
-  // ------------------------------------
-  int success = 0;
-  GLShader glShader("./vertexShaderSource.vert", "./fragmentShaderSource.frag",
+    // build and compile our shader program
+    // ------------------------------------
+    int success = 0;
+    GLShader glShader("./vertexShaderSource.vert", "./fragmentShaderSource.frag",
                     &success);
-  if (0 == success) {
+    if (0 == success) {
     fprintf(stderr, "Failed to Create OpenGL Shader\n");
     glfwTerminate();
     return EXIT_FAILURE;
-  }
+    }
 
-  // set up vertex data (and buffer(s)) and configure vertex attributes
-  // ------------------------------------------------------------------
-  // 三角形
-  //    float vertices[] = {
-  //        // position          // color
-  //        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // left
-  //         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // right
-  //         0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f  // top
-  //    };
-  //
-  //     unsigned int indices[] = { // 注意索引从0开始!
-  //         0, 1, 2
-  //     };
-  //
-  //    float texCoords[] = {
-  //        0.0f, 0.0f,
-  //        1.0f, 0.0f,
-  //        0.5f, 1.0f
-  //    };
+    // set up vertex data (and buffer(s)) and configure vertex attributes
+    // ------------------------------------------------------------------
+    // 三角形
+    //    float vertices[] = {
+    //        // position          // color
+    //        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // left
+    //         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // right
+    //         0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f  // top
+    //    };
+    //
+    //     unsigned int indices[] = { // 注意索引从0开始!
+    //         0, 1, 2
+    //     };
+    //
+    //    float texCoords[] = {
+    //        0.0f, 0.0f,
+    //        1.0f, 0.0f,
+    //        0.5f, 1.0f
+    //    };
 
-  /*
-  // 矩形
-  float texturePadding = 0.0f;
-  float vertices[] = {
+    /*
+    // 矩形
+    float texturePadding = 0.0f;
+    float vertices[] = {
       // ---- 位置 ----          ---- 颜色 ----      - 纹理坐标 -
       0.5f,
       0.5f,
@@ -129,18 +132,18 @@ int main(int argc, char *argv[]) {
       0.0f,
       0.0f + texturePadding,
       1.0f - texturePadding // 左上
-  };
+    };
 
-  unsigned int indices[] = {
+    unsigned int indices[] = {
       // 注意索引从0开始!
       0, 1, 3, // 第一个三角形
       1, 2, 3  // 第二个三角形
-  };
-  */
+    };
+    */
 
-  // set up vertex data (and buffer(s)) and configure vertex attributes
-  // ------------------------------------------------------------------
-  float vertices[] = {
+    // set up vertex data (and buffer(s)) and configure vertex attributes
+    // ------------------------------------------------------------------
+    float vertices[] = {
       -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
       0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
       -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
@@ -164,118 +167,118 @@ int main(int argc, char *argv[]) {
       -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
       0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
       -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
-  // world space positions of our cubes
-  glm::vec3 cubePositions[] = {
+    // world space positions of our cubes
+    glm::vec3 cubePositions[] = {
       glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
       glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
       glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
       glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
       glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
 
-  // configure global opengl state
-  // -----------------------------
-  glEnable(GL_DEPTH_TEST);
+    // configure global opengl state
+    // -----------------------------
+    glEnable(GL_DEPTH_TEST);
 
-  // VAO
-  unsigned int VAO = 0;
-  glGenVertexArrays(1, &VAO);
-  // bind the Vertex Array Object first, then bind and set vertex buffer(s), and
-  // then configure vertex attributes(s).
-  glBindVertexArray(VAO);
+    // VAO
+    unsigned int VAO = 0;
+    glGenVertexArrays(1, &VAO);
+    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and
+    // then configure vertex attributes(s).
+    glBindVertexArray(VAO);
 
-  // VBO
-  unsigned int VBO = 0;
-  glGenBuffers(1, &VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) /*bytes*/, vertices,
+    // VBO
+    unsigned int VBO = 0;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) /*bytes*/, vertices,
                GL_STATIC_DRAW);
-  // link VBO to Vertex shader
-  // ---------------------------
-  // link position vertex data
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float) /*stride*/,
+    // link VBO to Vertex shader
+    // ---------------------------
+    // link position vertex data
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float) /*stride*/,
                         (void *)0);
-  glEnableVertexAttribArray(0);
-  // link color vertex data
-  // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float)
-  // /*stride*/, (void *)(3 * sizeof(float)) /*offset*/);
-  // glEnableVertexAttribArray(1);
-  // link 2d-texture vertex data
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float) /*stride*/,
+    glEnableVertexAttribArray(0);
+    // link color vertex data
+    // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float)
+    // /*stride*/, (void *)(3 * sizeof(float)) /*offset*/);
+    // glEnableVertexAttribArray(1);
+    // link 2d-texture vertex data
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float) /*stride*/,
                         (void *)(3 * sizeof(float)) /*offset*/);
-  glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(2);
 
-  // EBO
-  /*
-  unsigned int EBO = 0;
-  glGenBuffers(1, &EBO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+    // EBO
+    /*
+    unsigned int EBO = 0;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
                GL_STATIC_DRAW);
-  */
+    */
 
-  // Some 2D-TO
-  // ----------
-  // first 2d-texture
-  unsigned int texture0;
-  glGenTextures(1, &texture0);
-  glBindTexture(GL_TEXTURE_2D, texture0);
-  // 为当前绑定的纹理对象设置环绕、过滤方式
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+    // Some 2D-TO
+    // ----------
+    // first 2d-texture
+    unsigned int texture0;
+    glGenTextures(1, &texture0);
+    glBindTexture(GL_TEXTURE_2D, texture0);
+    // 为当前绑定的纹理对象设置环绕、过滤方式
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                   GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  // 加载并生成纹理
-  int width, height, nrChannels;
-  stbi_set_flip_vertically_on_load(true);
-  unsigned char *data =
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // 加载并生成纹理
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char *data =
       stbi_load("container.jpg", &width, &height, &nrChannels, 0);
-  if (nullptr != data) {
+    if (nullptr != data) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
                  GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
-  } else {
+    } else {
     std::cout << "Failed to load texture0" << std::endl;
-  }
-  stbi_image_free(data);
-  glBindTexture(GL_TEXTURE_2D, 0);  // unbind
+    }
+    stbi_image_free(data);
+    glBindTexture(GL_TEXTURE_2D, 0);  // unbind
 
-  // second 2d-texture
-  unsigned int texture1;
-  glGenTextures(1, &texture1);
-  glBindTexture(GL_TEXTURE_2D, texture1);
-  // 为当前绑定的纹理对象设置环绕、过滤方式
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+    // second 2d-texture
+    unsigned int texture1;
+    glGenTextures(1, &texture1);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    // 为当前绑定的纹理对象设置环绕、过滤方式
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                   GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  // 加载并生成纹理
-  data = stbi_load("awesomeface.png", &width, &height, &nrChannels, 0);
-  if (nullptr != data) {
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // 加载并生成纹理
+    data = stbi_load("awesomeface.png", &width, &height, &nrChannels, 0);
+    if (nullptr != data) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
-  } else {
+    } else {
     std::cout << "Failed to load texture1" << std::endl;
-  }
-  stbi_image_free(data);
-  glBindTexture(GL_TEXTURE_2D, 0);  // unbind
+    }
+    stbi_image_free(data);
+    glBindTexture(GL_TEXTURE_2D, 0);  // unbind
 
-  // unbind 2D-TO, EBO, VBO and VAO after linked VBO to Vertex shader
-  // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
+    // unbind 2D-TO, EBO, VBO and VAO after linked VBO to Vertex shader
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
-  // uncomment this call to draw in wireframe polygons.
-  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // uncomment this call to draw in wireframe polygons.
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-  float deltaFrameTime =
+    float deltaFrameTime =
       0.0f;  // 当前帧与上一帧的时间差, 其实就是渲染上一帧所用的时间
-  float lastFrameTime = 0.0f;  // 上一帧的时间
+    float lastFrameTime = 0.0f;  // 上一帧的时间
 
-  // Rendering Loop
-  while (glfwWindowShouldClose(mWindow) == false) {
+    // Rendering Loop
+    while (glfwWindowShouldClose(mWindow) == false) {
     float currentTime = glfwGetTime();
 
     if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -370,47 +373,58 @@ int main(int argc, char *argv[]) {
     // Flip Buffers and Draw
     glfwSwapBuffers(mWindow);
     glfwPollEvents();
-  }
+    }
 
-  // optional: de-allocate all resources once they've outlived their purpose:
-  // ------------------------------------------------------------------------
-  glDeleteTextures(1, &texture1);
-  glDeleteTextures(1, &texture0);
-  // glDeleteBuffers(1, &EBO);
-  glDeleteBuffers(1, &VBO);
-  glDeleteVertexArrays(1, &VAO);
+    // optional: de-allocate all resources once they've outlived their purpose:
+    // ------------------------------------------------------------------------
+    glDeleteTextures(1, &texture1);
+    glDeleteTextures(1, &texture0);
+    // glDeleteBuffers(1, &EBO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &VAO);
 
-  // glfw: terminate, clearing all previously allocated GLFW resources.
-  // ------------------------------------------------------------------
-  glfwTerminate();
-  return EXIT_SUCCESS;
-}
+    // glfw: terminate, clearing all previously allocated GLFW resources.
+    // ------------------------------------------------------------------
+    glfwTerminate();
+    return EXIT_SUCCESS;
+    }
 
-void framebuffer_size_changed(GLFWwindow *window, int width, int height) {
-  glViewport(0, 0, width, height);
-}
+    void framebuffer_size_changed(GLFWwindow *window, int width, int height) {
+    glViewport(0, 0, width, height);
+    }
 
-void mouse_callback(GLFWwindow *window, double xPos, double yPos) {
-  if (firstMouse) {
-    lastX = xPos;
-    lastY = yPos;
-    firstMouse = false;
-  }
+    void mouse_callback(GLFWwindow *window, double xPos, double yPos) {
+      // std::cout << xPos << ", " << yPos << std::endl;
+      if (firstMouse) {
+        // why here?
+        // As
+        // https://www.glfw.org/docs/3.3/group__input.html#ga04b03af936d906ca123c8f4ee08b39e7
+        // mention :
+        // "The window must have input focus."
+        glfwSetCursorPos(mWindow, centerX, centerY);
+        firstMouse = false;
+      }
 
-  float xOffset = xPos - lastX;
-  float yOffset =
-      lastY - yPos;  // 注意这里是相反的，因为y坐标是从底部往顶部依次增大的
-  lastX = xPos;
-  lastY = yPos;
+      // left yaw
+      if (xPos < centerX) {
+        if (xPos < 0.0) {
+            xPos = 0.0;
+        }
+    }
 
-  float sensitivity = 0.25f;
-  xOffset *= sensitivity;
-  yOffset *= sensitivity;
+    if (xPos > centerX) {
+        if (xPos > mWidth) {
+            xPos = mWidth;
+        }
+    }
 
-  camera.ProcessMouseMovement(xOffset, yOffset);
-}
+    float xOffset = (xPos - centerX) / centerX * 89.0f;
+    float yOffset = (centerY - yPos) / centerY * 89.0f;  // 注意这里是相反的，因为y坐标是从底部往顶部依次增大的
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
+    camera.ProcessMouseMovement(xOffset, yOffset);
+    }
+
+    void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+    {
     camera.ProcessMouseScroll(yoffset);
-}
+    }
