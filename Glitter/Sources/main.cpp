@@ -16,7 +16,17 @@ const char *contentsOfShaderSource(const char *filePath);
 
 void framebuffer_size_changed(GLFWwindow *window, int width, int height);
 
+void mouse_callback(GLFWwindow *window, double xPos, double yPos);
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+
 float mixValue = 0.2f;
+
+float lastX = mWidth / 2, lastY = mHeight / 2;
+
+// camera
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+bool firstMouse = true;
 
 int main(int argc, char *argv[]) {
   // Load GLFW and Create a Window
@@ -47,6 +57,9 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
 
   glfwSetFramebufferSizeCallback(mWindow, framebuffer_size_changed);
+  glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetCursorPosCallback(mWindow, mouse_callback);
+  glfwSetScrollCallback(mWindow, scroll_callback);
 
   // build and compile our shader program
   // ------------------------------------
@@ -124,70 +137,45 @@ int main(int argc, char *argv[]) {
       1, 2, 3  // 第二个三角形
   };
   */
-    
+
   // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
-    float vertices[] = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+  // ------------------------------------------------------------------
+  float vertices[] = {
+      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
+      0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
 
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+      0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+      -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
 
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+      -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,
 
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+      0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 0.0f, 1.0f,
+      0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 1.0f,
+      0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
 
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-    };
-    // world space positions of our cubes
-    glm::vec3 cubePositions[] = {
-        glm::vec3( 0.0f,  0.0f,  0.0f),
-        glm::vec3( 2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3( 2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3( 1.3f, -2.0f, -2.5f),
-        glm::vec3( 1.5f,  2.0f, -2.5f),
-        glm::vec3( 1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
+      -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+      -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
+  // world space positions of our cubes
+  glm::vec3 cubePositions[] = {
+      glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
+      glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
+      glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
+      glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
+      glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
 
-// configure global opengl state
-// -----------------------------
-glEnable(GL_DEPTH_TEST);
-    
+  // configure global opengl state
+  // -----------------------------
+  glEnable(GL_DEPTH_TEST);
+
   // VAO
   unsigned int VAO = 0;
   glGenVertexArrays(1, &VAO);
@@ -208,11 +196,12 @@ glEnable(GL_DEPTH_TEST);
                         (void *)0);
   glEnableVertexAttribArray(0);
   // link color vertex data
-  //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float) /*stride*/, (void *)(3 * sizeof(float)) /*offset*/);
-  //glEnableVertexAttribArray(1);
+  // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float)
+  // /*stride*/, (void *)(3 * sizeof(float)) /*offset*/);
+  // glEnableVertexAttribArray(1);
   // link 2d-texture vertex data
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float) /*stride*/,
-                        (void*)(3 * sizeof(float)) /*offset*/);
+                        (void *)(3 * sizeof(float)) /*offset*/);
   glEnableVertexAttribArray(2);
 
   // EBO
@@ -249,7 +238,7 @@ glEnable(GL_DEPTH_TEST);
     std::cout << "Failed to load texture0" << std::endl;
   }
   stbi_image_free(data);
-  glBindTexture(GL_TEXTURE_2D, 0); // unbind
+  glBindTexture(GL_TEXTURE_2D, 0);  // unbind
 
   // second 2d-texture
   unsigned int texture1;
@@ -271,18 +260,24 @@ glEnable(GL_DEPTH_TEST);
     std::cout << "Failed to load texture1" << std::endl;
   }
   stbi_image_free(data);
-  glBindTexture(GL_TEXTURE_2D, 0); // unbind
+  glBindTexture(GL_TEXTURE_2D, 0);  // unbind
 
   // unbind 2D-TO, EBO, VBO and VAO after linked VBO to Vertex shader
-  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
   // uncomment this call to draw in wireframe polygons.
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+  float deltaFrameTime =
+      0.0f;  // 当前帧与上一帧的时间差, 其实就是渲染上一帧所用的时间
+  float lastFrameTime = 0.0f;  // 上一帧的时间
+
   // Rendering Loop
   while (glfwWindowShouldClose(mWindow) == false) {
+    float currentTime = glfwGetTime();
+
     if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
       glfwSetWindowShouldClose(mWindow, true);
     }
@@ -301,15 +296,30 @@ glEnable(GL_DEPTH_TEST);
       }
     }
 
+    deltaFrameTime = currentTime - lastFrameTime;
+    lastFrameTime = currentTime;
+    if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS ||
+        glfwGetKey(mWindow, GLFW_KEY_UP) == GLFW_PRESS)
+      camera.ProcessKeyboard(FORWARD, deltaFrameTime);
+    if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS ||
+        glfwGetKey(mWindow, GLFW_KEY_DOWN) == GLFW_PRESS)
+      camera.ProcessKeyboard(BACKWARD, deltaFrameTime);
+    if (glfwGetKey(mWindow, GLFW_KEY_A) == GLFW_PRESS ||
+        glfwGetKey(mWindow, GLFW_KEY_LEFT) == GLFW_PRESS)
+      camera.ProcessKeyboard(LEFT, deltaFrameTime);
+    if (glfwGetKey(mWindow, GLFW_KEY_D) == GLFW_PRESS ||
+        glfwGetKey(mWindow, GLFW_KEY_RIGHT) == GLFW_PRESS)
+      camera.ProcessKeyboard(RIGHT, deltaFrameTime);
+
     // Background Fill Color
     // glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // draw our first triangle
-    glBindVertexArray(VAO);                     // bind VAO
-    //glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); // bind EBO
+    glBindVertexArray(VAO);  // bind VAO
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); // bind EBO
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture0);
@@ -317,8 +327,7 @@ glEnable(GL_DEPTH_TEST);
     glBindTexture(GL_TEXTURE_2D, texture1);
 
     glShader.use();
-    float timeValue = glfwGetTime();
-    float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
+    float greenValue = (sin(currentTime) / 2.0f) + 0.5f;
     glShader.setFloat("myColor", 0.0f, greenValue, 0.0f);
 
     glShader.setInt("ourTexture0", GL_TEXTURE0 - GL_TEXTURE0 /*GL_TEXTURE0*/);
@@ -326,14 +335,10 @@ glEnable(GL_DEPTH_TEST);
 
     glShader.setFloat("mixValue", mixValue);
 
-    float radius = 10.f;
-    float camX = sin(timeValue) * radius;
-    float camZ = cos(timeValue) * radius;
-    glm::mat4 view = glm::mat4(1.0f);
-    view = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 view = camera.GetViewMatrix();
 
     glm::mat4 projection = glm::mat4(1.0f);
-    projection = glm::perspective(glm::radians(45.0f),
+    projection = glm::perspective(glm::radians(camera.Zoom),
                                   (float)mWidth / (float)mHeight, 0.1f, 100.0f);
 
     for (unsigned int i = 0; i < 10; i++) {
@@ -341,26 +346,26 @@ glEnable(GL_DEPTH_TEST);
       // drawing
       glm::mat4 model = glm::mat4(1.0f);
       model = glm::translate(model, cubePositions[i]);
-      float angle = 20.0f * i + 5.0f;
-      model =
-        glm::rotate(model, (float)timeValue * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+      float angle = 20.0f * i;
+      model = glm::rotate(model, (float)currentTime * glm::radians(angle),
+                          glm::vec3(1.0f, 0.3f, 0.5f));
       glShader.setMatrix4("transform", 1, GL_FALSE,
                           glm::value_ptr(projection * view * model));
 
       glDrawArrays(GL_TRIANGLES, 0, 36);
-     }
+    }
 
-     //glDrawArrays(GL_TRIANGLES, 0, 36);
-    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    // glDrawArrays(GL_TRIANGLES, 0, 36);
+    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-//    glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D, 0);
-//    glActiveTexture(GL_TEXTURE1);
-//    glBindTexture(GL_TEXTURE_2D, 0);
+    //    glActiveTexture(GL_TEXTURE0);
+    //    glBindTexture(GL_TEXTURE_2D, 0);
+    //    glActiveTexture(GL_TEXTURE1);
+    //    glBindTexture(GL_TEXTURE_2D, 0);
 
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // unbind EBO
-    //glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);                     // unbind VAO
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // unbind EBO
+    // glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);  // unbind VAO
 
     // Flip Buffers and Draw
     glfwSwapBuffers(mWindow);
@@ -371,7 +376,7 @@ glEnable(GL_DEPTH_TEST);
   // ------------------------------------------------------------------------
   glDeleteTextures(1, &texture1);
   glDeleteTextures(1, &texture0);
-  //glDeleteBuffers(1, &EBO);
+  // glDeleteBuffers(1, &EBO);
   glDeleteBuffers(1, &VBO);
   glDeleteVertexArrays(1, &VAO);
 
@@ -381,6 +386,31 @@ glEnable(GL_DEPTH_TEST);
   return EXIT_SUCCESS;
 }
 
-void framebuffer_size_changed(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
+void framebuffer_size_changed(GLFWwindow *window, int width, int height) {
+  glViewport(0, 0, width, height);
+}
+
+void mouse_callback(GLFWwindow *window, double xPos, double yPos) {
+  if (firstMouse) {
+    lastX = xPos;
+    lastY = yPos;
+    firstMouse = false;
+  }
+
+  float xOffset = xPos - lastX;
+  float yOffset =
+      lastY - yPos;  // 注意这里是相反的，因为y坐标是从底部往顶部依次增大的
+  lastX = xPos;
+  lastY = yPos;
+
+  float sensitivity = 0.25f;
+  xOffset *= sensitivity;
+  yOffset *= sensitivity;
+
+  camera.ProcessMouseMovement(xOffset, yOffset);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    camera.ProcessMouseScroll(yoffset);
 }

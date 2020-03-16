@@ -5,6 +5,7 @@
 
 // Local Headers
 #include "glshader.hpp"
+#include "camera.hpp"
 
 // System Headers
 #include <assimp/Importer.hpp>
